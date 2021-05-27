@@ -1,3 +1,9 @@
+const app = getApp();
+const db = wx.cloud.database();
+const store = db.collection("store");
+const userInfo = db.collection("userInfo");
+const _ = db.command;
+
 Page({
 
   /**
@@ -56,4 +62,37 @@ Page({
       }
     })
   },
+
+  uploadPhoto(filePath) {
+    return wx.cloud.uploadFile({
+      cloudPath: `${Date.now()}-${Math.floor(Math.random(0, 1) * 10000000)}.png`,
+      filePath
+    })
+  },
+
+  uploadImgs() {
+    wx.showLoading({
+      title: '上传中'
+    })
+    const uploadTask = this.data.imgList.map(item => this.uploadPhoto(item))
+    Promise.all(uploadTask).then(result => {
+      console.log("上传结果", result)
+      let resultImageUrls = [];
+      for (const file of result) {
+        resultImageUrls.push(file.fileID);
+      }
+      console.log("上传后的图片云存储路径", resultImageUrls)
+      wx.hideLoading();
+      wx.showToast({
+        title: '上传图片成功',
+        icon: 'success'
+      })
+    }).catch(() => {
+      wx.hideLoading()
+      wx.showToast({
+        title: '上传图片错误',
+        icon: 'error'
+      })
+    })
+  }
 })
